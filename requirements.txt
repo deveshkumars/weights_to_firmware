@@ -1,0 +1,12 @@
+# Requirements for modernized quad_gen module
+# Python 3.8+ required
+
+# Core dependencies
+tensorflow>=2.0.0
+numpy>=1.19.0
+joblib>=1.0.0
+pyyaml>=5.4.0
+
+# Optional: for development and testing
+pytest>=6.0.0
+mypy>=0.800  # for type checking 
