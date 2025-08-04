@@ -1,4 +1,6 @@
-# Modernization Summary
+# Changes from original code Summary
+
+Work in progress, please revisit later
 
 This document summarizes the changes made to modernize the `quad_gen` module for TensorFlow 2 and Python 3.8+ compatibility.
 

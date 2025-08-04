@@ -3,6 +3,7 @@ import numpy as np
 import os
 from typing import List, Optional, Any
 
+
 # Import TensorFlow
 import tensorflow as tf
 
@@ -65,7 +66,7 @@ def generate(policy: Any, sess: Any, output_path: Optional[str] = None) -> str:
 	biases: List[str] = []		# strings
 	outputs: List[str] = []	# strings
 
-	structure = f"""static const int structure[{int(n_layers/2)}][2] = {{"""
+	structure = f"""static const int structure[{int(n_layers/2 + 1)}][2] = {{""" # structure code thingy
 
 	n_weight = 0
 	n_bias = 0

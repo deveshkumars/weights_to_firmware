@@ -1,9 +1,10 @@
 [project]
-name = "quad-sim2multireal"
+name = "weights_to_firmware"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 dependencies = [
-    "joblib==0.13.0",
+    "tensorflow>=2.0.0"
+
 ]

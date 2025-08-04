@@ -1,231 +1,197 @@
-# the real deal is in main.py and also make sure to rename the params 
+# Weights to Firmware: C Code Generation for Neural Network Controllers
+
+## Work in Progress
+- changes will come in the future
 
 
 
-
-
-# Sim-to-(Multi)-Real: Transfer of Low-Level Robust Control Policies to Multiple Quadrotors
+## Adapted Project From: Sim-to-(Multi)-Real: Transfer of Low-Level Robust Control Policies to Multiple Quadrotors
 - Authors: [Artem Molchanov](https://amolchanov86.github.io/), [Tao Chen](https://taochenosu.github.io/), [Wolfgang Hönig](http://act.usc.edu/group.html), [James A. Preiss](http://jpreiss.github.io/), [Nora Ayanian](https://viterbi-web.usc.edu/~ayanian/), [Gaurav S. Sukhatme](http://robotics.usc.edu/~gaurav/)
 - Paper Link: [ArXiv](https://arxiv.org/abs/1903.04628)
 - Project site: [Google Site](https://sites.google.com/view/sim-to-multi-quad)
 
 <!-- - If you use our work in academic research, please cite us:) -->
 
+This project now supports automatic generation of C code from trained neural network models for quadrotor control.
 
-## Dependencies
+## Overview
 
-- [Garage](https://github.com/rlworkgroup/garage/)
+The C code generation feature converts trained neural network models (typically trained with Brax/JAX) into C code that can be deployed on embedded systems like the Crazyflie quadrotor.
 
-## Installation
+## Requirements
 
-### Step 0
+- Python 3.11 (TensorFlow compatibility)
+- TensorFlow 2.x
+- A pkl file to load in
+- Other dependencies in `requirements.txt`
 
-Create directory for all projects:
+## Setup
 
-```sh
-mkdir ~/sim2multireal
-cd ~/sim2multireal
-```
-
-Instead of `~/sim2multireal` you could use any directory you like. It is given just as an example.
-
-### Step 1
-
-Pull [garage](https://github.com/rlworkgroup/garage/).
-
-```sh
-git clone https://github.com/rlworkgroup/garage/
-```
-
-Checkout the following commit:
-
-```sh
-cd garage
-git checkout 77714c38d5b575a5cfd6d1e42f0a045eebbe3484
-```
-
-Follow the garage [setup instructions](http://rlgarage.readthedocs.io/en/latest/user/installation.html) given below.
-
-The setup requires a MuJoCo key, but since we are not using MuJoCo you can generate a placeholder keyfile.
-
-```sh
-touch mjkey.txt
-echo "hello" >> mjkey.txt
-```
-
-On linux:
-
-```sh
-./scripts/setup_linux.sh --mjkey mjkey.txt --modify-bashrc
-```
-
-On macOS:
-
-```sh
-./scripts/setup_macos.sh --mjkey mjkey.txt --modify-bashrc
-```
-
-### Step 2
-
-Clone this repository:
-
-```sh
-cd ~/sim2multireal
-git clone https://github.com/amolchanov86/quad_sim2multireal.git
-cd quad_sim2multireal
-```
-
-### Step 3
-
-Install additional dependencies
-
-On linux:
-
-```sh
-bash install_depend_linux.sh
-```
-
-On macOS:
-
-```sh
-bash install_depend_macos.sh
-```
-
-### Step 4
-
-Create a new conda environment:
-
-```sh
-conda env create -f conda_env.yml
-```
-
-## Preparing to run experiements
-
-### General
-
-Each time before running experiments make sure to -
-
-- Activate the conda environment for the experiment
-- Add all repos in your `$PYTHONPATH`
-
-```sh
-conda activate quad_s2r
-
-export PYTHONPATH=$PYTHONPATH:~/sim2multireal/garage
-export PYTHONPATH=$PYTHONPATH:~/sim2multireal/quad_sim2multireal
-```
-
-## Experiments
-
-First, go to the root folder:
-
-```sh
-cd ~/sim2multireal/quad_sim2multireal/quad_train
-```
-
-### Training
-
-#### Train Quadrotor to stabilize at the origin with random initialization and 5 seeds (you need many seeds since some will fail)
-
-```sh
-bash ./launchers/ppo_crazyflie_baseline.sh
-```
-
-#### Train Quadrotor to stabilize at the origin with random initialization and a default seed (may fail)
-
-```sh
-python ./train_quad.py config/ppo__crazyflie_baseline.yml _results_temp/ppo_crazyflie_baseline/seed_001
-```
-
-### Monitoring
-
-#### Use `tensorborad` to monitor the training progress
-
-```sh
-tensorboard --logdir ./_results_temp
-```
-
-#### To use a specific port
-
-```sh
-tensorboard --logdir ./_results_temp --port port_num
-```
-
-### Plotting
-
-`plot_tools` library allows nice plotting of statistics.
-It assumes that the training results are organized as following: `_results_temp/experiment_folder/seed_{X}/progress.csv` , where:
-
-- `_results_temp`: is the folder containing all experiments and runs.
-- `experiment_folder`: is the folder containing an experiment (that could be run with one or multiple seeds).
-  They typically named as `param1_paramval1__param2_paramval2`, etc. I.e. they reflect the key parameters and their values in the run.
-- `seed_{X}`: is the run folder, i.e. experiment with a particular seed wit value `{X}`
-
-The plot_tools module contains:
-
-- `plot_tools.py`: the library containing all core functionality + it is also a script that can show results of a single experiment. Example:
-
-   ```sh
-    ./plot_tools/plot_tools experiment_folder
+1. **Create the conda environment:** (yml file coming soon)
+   ```bash
+   conda create -n quad_tf python=3.11 tensorflow -y
+   conda activate quad_tf
+   pip install -r requirements.txt
    ```
 
-- `plot_graphs_with_seeds.py`: a script to plot results with multiple seeds. Example:
+OR
 
-   ```sh
-   ./plot_tools/plot_graphs_with_seeds.py _results_temp
+2. **Activate the UV environment:**
+   ```bash
+   uv venv
+   source .venv/bin/activate  # On Unix/macOS
+   # OR
+   .venv\Scripts\activate     # On Windows
+   pip install -r requirements.txt
    ```
 
-Look into `--help` option for all the scripts mentioned above for more options.
+   ```
+   uv sync
+   ```
 
-### Testing a newly trained model in simulation
 
-`test_controller.py` under `quad_gen` allows you test your fresh model in the simulation with some customizability to the environment. 
 
-Please use `test_controller.py -h` to see the options.
 
-### Generating source code for Crazyflie firmware
+## Usage
 
-`quad_gen` library allow fast generation of embedded source code for the Crazyflie firmware.
+### Quick Start
 
-Once you have successfully trained a quadrotor stabilizing policy, you will get a pickle file `params.pkl` that is contained in a folder with other data that will be useful for analysis.
+1. Rename your pkl file to params.pkl
+2. Put the .pkl file in input_model
+3. Run the C code generation script:
 
-In this process, it also assumes the results are organized as following: `_results_temp/experiment_folder/seed_{X}/params.pkl`.
-
-First, go to `~/sim2multireal/quad_sim2multireal/quad_gen`
-
-```sh
-cd ~/sim2multireal/quad_sim2multireal/quad_gen
+```bash
+conda activate quad_tf
+python generate_c_code.py
 ```
 
-#### To generate source code for all training results
+4. Take the network_evaluate.c function from output_model/ and insert it into your rl controller (If using )
 
-```sh
-python ./get_models.py 2 _results_temp/ ./models/
+
+
+# Everything below here needs to be edited
+
+
+### Programmatic Usage (straight from original paper code)
+
+```python
+import quad_gen.get_models as get_models
+
+# Generate C code from a model
+get_models.save_result(
+    model_dir="path/to/input_model",
+    out_dir="path/to/output_model"
+)
 ```
 
-`_results_temp/` may contain multiple experiments.
+## Generated Files
 
-#### To generate source code only for the best seeds
+The C code generation produces:
 
-```sh
-python ./get_models.py 1 _results_temp/ ./models/
+1. **`network_evaluate.c`** - The main C implementation containing:
+   - Neural network structure definition
+   - Weight matrices and bias vectors
+   - Activation functions (linear, sigmoid, relu)
+   - `networkEvaluate()` function for forward pass
+   - Output assignment to control structure
+
+2. **`params.pkl`** - Backup of original model parameters
+
+## Generated C Code Structure
+
+The generated C code includes:
+
+- **Header includes**: `#include "network_evaluate.h"`
+- **Activation functions**: `linear()`, `sigmoid()`, `relu()`
+- **Network structure**: Static arrays defining layer dimensions
+- **Weight matrices**: All neural network weights as 2D arrays
+- **Bias vectors**: All bias terms as 1D arrays
+- **Output arrays**: Static arrays for intermediate layer outputs
+- **Main function**: `networkEvaluate()` that performs the forward pass
+
+## Model Compatibility
+
+The system supports:
+- **JAX/Flax models**: Trained with Brax or similar frameworks
+- **TensorFlow models**: Traditional TensorFlow models
+- **Parameter structures**: Handles various parameter formats
+
+## Integration with Crazyflie
+
+The generated C code is designed to integrate with the Crazyflie firmware:
+
+1. Include the generated `network_evaluate.c` in your firmware
+2. Call `networkEvaluate()` from your controller
+3. The function expects:
+   - `control_n`: Control structure for thrust outputs
+   - `state_array`: Input state vector
+
+## Example Integration (needs to be updated)
+
+```c
+// In your controller
+float state_array[17];  // Your state vector
+struct control_t_n control_n;
+
+// Fill state_array with current state
+// ...
+
+// Run neural network
+networkEvaluate(&control_n, state_array);
+
+// Use outputs
+float thrust_0 = control_n.thrust_0;
+float thrust_1 = control_n.thrust_1;
+float thrust_2 = control_n.thrust_2;
+float thrust_3 = control_n.thrust_3;
 ```
 
-`_results_temp/` may also contain multiple experiments.
+## Troubleshooting
 
-#### To generate source code for selected seeds
+### Common Issues
 
-```sh
-python ./get_models.py 0 _results_temp/ ./models/ -txt [dirs_file]
-```
+1. **TensorFlow import errors**: Make sure you're using Python 3.11 and the correct conda environment
+2. **Model loading errors**: Ensure the model was trained with compatible frameworks
+3. **Parameter structure errors**: The system automatically detects and handles different parameter formats
 
-In this case, the `-txt` option is required and allows you to specify relative path (to the `_results_temp/`) of the seeds you would like to generate the source code for. In general when selecting a seed, you will look at the plotting statistics or the tensorboard.
-If you use tensorboard, we recommend to look at the position reward and the Gaussian policy variance.
+### Debugging
 
-Instead of `./models/` you could use any directory you like. It is given just as an example.
-The code for the NN baseline used on the paper is included in `models/` as an example.
+If you encounter issues:
+1. Check that all dependencies are installed correctly
+2. Verify the model file exists and is readable
+3. Ensure the output directory is writable
+4. Check the console output for specific error messages
 
-### Running on hardware
+## Technical Details
+
+### Neural Network Architecture
+
+The generated C code supports:
+- **Input layer**: 13 dimensions (state vector)
+- **Hidden layers**: Configurable (typically 32 neurons each)
+- **Output layer**: 4 dimensions (thrust commands)
+- **Activation**: tanh for hidden layers, linear for output
+
+### Performance Considerations
+
+- **Memory usage**: All weights are stored as static arrays
+- **Computation**: Simple matrix-vector operations
+- **Optimization**: Suitable for real-time embedded systems
+
+## Contributing
+
+To extend the C code generation:
+
+1. **Add new activation functions**: Modify `code_blocks.py`
+2. **Support new model formats**: Update `gaussian_mlp.py`
+3. **Modify output format**: Adjust the C code generation logic
+
+## License
+
+This C code generation feature is part of the quad_sim2multireal project. 
+
+
+### Running on hardware (from original repo)
 
 To run a train network on the Crazyflie hardware, please use a modified version of the Crazyswarm software: [quad_nn](https://github.com/TaoChenOSU/quad_nn)
 To test your newly trained network, replace `network_evaluate.c` under `src/modules/src/` within `quad_nn_firmware` with the new `network_evaluate.c` generated from the previous step.
